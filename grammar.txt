@@ -1,0 +1,53 @@
+program:
+  | statement program
+  | EOF
+
+statement:
+  | compound_stmt NEWLINE
+  | simple_stmt NEWLINE
+  | NEWLINE
+
+simple_stmt:
+  | assignment
+  | expression
+
+compound_stmt:
+  | function_def
+  | if_stmt
+
+function_def:
+
+if_stmt:
+
+elif_stmt:
+
+else_stmt:
+
+assignment:
+  | NAME '=' expression
+
+expression:
+  | unary_primitive
+  | binary_primitive
+  | atom
+
+unary_primitive:
+  | '!' expression
+  | 'print' expression
+
+binary_primitive:
+  | expression '+' expression
+  | expression '-' expression
+  | expression '*' expression
+  | expression '/' expression
+  | expression '==' expression
+  | expression '!=' expression
+  | expression '<' expression
+  | expression '>' expression
+
+atom:
+  | NAME
+  | 'True'
+  | 'False'
+  | STRING
+  | NUMBER
