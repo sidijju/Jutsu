@@ -1,2 +1,0 @@
-(name) helloworld no jutsu:
-  release "Hello world, " + name
