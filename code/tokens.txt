@@ -1,0 +1,23 @@
+token:
+  | FUNCTION
+  | IF
+  | ELIF
+  | ELSE
+  | PLUS
+  | MINUS
+  | MULT
+  | DIV
+  | EQ
+  | NOT
+  | LT
+  | GT
+  | LPAREN
+  | RPAREN
+  | COMMA
+  | ID
+  | STRING
+  | NUM
+  | TRUE
+  | FALSE
+  | NEWLINE
+  | EOF
