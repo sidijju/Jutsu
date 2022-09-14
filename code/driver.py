@@ -5,12 +5,14 @@ import interpreter
 import sys, getopt
 
 env = {}
+VERSION = "0.0.0"
 
 def usage():
-    print("usage: python [option] ... [file | -] [arg] ...")
+    print("usage: jutsu [option] ... [file | -] [arg] ...")
     print("-c     : use compiler instead of the default interpreter (also --compile)")
     print("-h     : print this help message and exit (also --help)")
     print("-v     : verbose (also --verbose)")
+    print("-V     : print the Jutsu version number and exit (also --version)")
     print("file   : program read from script file")
     print("-      : program read from stdin (default)")
     print("arg ...: arguments passed to program in sys.argv[1:]")
@@ -37,6 +39,9 @@ for o, a in opts:
         sys.exit()
     elif o in ("-c", "--compile"):
         executor = compiler.process
+    elif o in ("-V, --version"):
+        print("Jutsu", VERSION)
+        sys.exit()
     else:
         assert False, "unhandled option"
 
@@ -47,10 +52,15 @@ if len(sys.argv) > 1:
 else:
     while True:
         try:
-            print("Jutsu 0.0.0")
+            print("Jutsu", VERSION)
+            print("Type \"help\" for more information.")
             text = input(">>> ")
         except EOFError:
             break
 
-        if text:
+        if text == 'help':
+            usage()
+        if text == 'quit':
+            sys.exit()
+        else:
             execute(executor, text)
