@@ -1,2 +1,2 @@
-def interpret(ast, env):
+def process(ast, env):
     return NotImplementedError

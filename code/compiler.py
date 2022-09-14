@@ -1,4 +1,4 @@
 
 
-def compile(ast, env):
+def process(ast, env):
     return NotImplementedError
