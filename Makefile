@@ -16,4 +16,8 @@ install:
 	rm -rf installer
 	@echo "Jutsu installed in /usr/local/bin"
 	@echo "Installation Completed"
+
+test:
+	@echo "Test Jutsu Build"
+	@python code/driver.py tests/helloworld.ju
 	

@@ -4,7 +4,6 @@ import compiler
 import interpreter
 import sys, getopt
 
-env = {}
 VERSION = "0.0.0"
 
 def usage():
@@ -20,6 +19,8 @@ def usage():
 def execute(executor, text):
     ast = parser.parse(tokenizer.tokenize(text))
     executor(ast, env)
+
+env = {}
 
 try:
     opts, args = getopt.getopt(sys.argv[1:],"hvc",["help", "verbose", "compile"])
@@ -45,10 +46,12 @@ for o, a in opts:
     else:
         assert False, "unhandled option"
 
-if len(sys.argv) > 1:
-    #read text from file
-    text = ""
-    execute(executor, text)   
+if len(args) >= 1:
+    file = open(args[0], mode='r')
+    targs = args[1:]  # TODO add functionality to actually use tail args
+    text = file.read()
+    file.close()
+    execute(executor, text)  
 else:
     while True:
         try:
