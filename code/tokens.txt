@@ -1,23 +1,46 @@
 token:
-  | FUNCTION
-  | IF
-  | ELIF
-  | ELSE
+  | ENDMARKER
+  | NAME
+  | NUM
+  | STRING
+  | NEWLINE
+  | INDENT
+  | DEDENT
+  | LPAREN
+  | RPAREN
+  | LSQB
+  | RSQB
+  | COLON
   | PLUS
   | MINUS
   | MULT
   | DIV
-  | EQ
-  | NOT
+  | OR
+  | AND
   | LT
   | GT
-  | LPAREN
-  | RPAREN
-  | COMMA
-  | ID
-  | STRING
-  | NUM
-  | TRUE
-  | FALSE
-  | NEWLINE
-  | EOF
+  | EQ
+  | DOT
+  | PERCENT
+  | LBRACE
+  | RBRACE
+  | DEQ
+  | NEQ
+  | LEQ
+  | GEQ
+  | DSTAR
+  | LSHIFT
+  | RSHIFT
+  | PLUSEQ
+  | MINUSEQ
+  | MULEQ
+  | DIVEQ
+  | ANDEQ
+  | OREQ
+  | LSHIFTEQ
+  | RSHIFTEQ
+  | DSTAREQ
+  | IDIV
+  | IDIVEQ
+  | COMMENT
+  | NL
