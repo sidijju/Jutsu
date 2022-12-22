@@ -2,7 +2,7 @@
 
 ## About
 
-Jutsu is a Naruto-themed programming language created by Sid Ijju. Work on the language began on September 13th, 2022. The language is written from scratch (it includes an integrated tokenizer, parser, interpreter, and compiler).
+Jutsu is a Naruto-themed programming language created by Sid Ijju. Work on the language began on September 13th, 2022. The language is written from scratch (planned features include a tokenizer, parser, interpreter, and compiler).
 
 ## Why?
 
