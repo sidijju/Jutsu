@@ -1,2 +1,3 @@
-helloworld no jutsu:
+helloworld no jutsu {
   release "Hello world"
+}

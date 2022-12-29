@@ -17,7 +17,8 @@ def usage():
     print("arg ...: arguments passed to program in sys.argv[1:]")
 
 def execute(executor, text):
-    ast = parser.parse(tokenizer.tokenize(text))
+    tokens = tokenizer.tokenize(text)
+    ast = parser.parse(tokens)
     executor(ast, env)
 
 env = {}
