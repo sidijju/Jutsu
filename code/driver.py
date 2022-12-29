@@ -54,10 +54,10 @@ if len(args) >= 1:
     file.close()
     execute(executor, text)  
 else:
+    print("Jutsu", VERSION)
+    print("Type \"help\" for more information.")
     while True:
         try:
-            print("Jutsu", VERSION)
-            print("Type \"help\" for more information.")
             text = input(">>> ")
         except EOFError:
             break
