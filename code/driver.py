@@ -1,4 +1,4 @@
-import tokenizer
+from tokenizer import Tokenizer
 import parser
 import compiler
 import interpreter
@@ -17,7 +17,7 @@ def usage():
     print("arg ...: arguments passed to program in sys.argv[1:]")
 
 def execute(executor, text):
-    tokens = tokenizer.tokenize(text)
+    tokens = Tokenizer().tokenize(text)
     ast = parser.parse(tokens)
     executor(ast, env)
 
