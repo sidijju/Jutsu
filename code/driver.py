@@ -48,6 +48,8 @@ for o, a in opts:
         assert False, "unhandled option"
 
 if len(args) >= 1:
+    # TODO remove
+    print(args[0])
     file = open(args[0], mode='r')
     targs = args[1:]  # TODO add functionality to actually use tail args
     text = file.read()
