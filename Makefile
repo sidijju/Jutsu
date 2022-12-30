@@ -19,5 +19,5 @@ install:
 
 test:
 	@echo "Test Jutsu Build"
-	@python code/driver.py tests/helloworld.ju
+	@find ./tests -type f -name '*.ju' -exec jutsu {} \; 
 	
