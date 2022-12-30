@@ -1,0 +1,10 @@
+# Jutsu strings test
+print "hello\na\nxyz\n7\nTrue\nFalse\n_____"
+str = "hello"
+print str
+print "a\nb"+"c"
+print str * 2
+print len("qwerty")
+print str(4)
+print "abc" == "abc"
+print "abc" == "xyz"
