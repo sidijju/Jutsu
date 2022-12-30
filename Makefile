@@ -17,7 +17,11 @@ install:
 	@echo "Jutsu installed in /usr/local/bin"
 	@echo "Installation Completed"
 
-test:
+test-build:
 	@echo "Test Jutsu Build"
 	@find ./tests -type f -name '*.ju' -exec jutsu {} \; 
+
+test:
+	@echo "Test Jutsu Build"
+	@find ./tests -type f -name '*.ju' -exec python code/driver.py {} \; 
 	
