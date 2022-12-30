@@ -1,5 +1,5 @@
 from tokenizer import Tokenizer
-import parser
+from parser import Parser
 import compiler
 import interpreter
 import sys, getopt
@@ -18,7 +18,9 @@ def usage():
 
 def execute(executor, text):
     tokens = Tokenizer().tokenize(text)
-    ast = parser.parse(tokens)
+    print(tokens)
+    ast = Parser(tokens).ast
+    print(ast)
     executor(ast, env)
 
 env = {}

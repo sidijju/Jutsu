@@ -166,5 +166,4 @@ class Tokenizer:
                     tokens.append(token)
             if not tokenized:
                 raise Exception("Unreadable or invalid character %c during tokenization" % (input[current]))
-        print(tokens)
         return tokens
