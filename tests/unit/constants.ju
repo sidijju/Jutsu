@@ -1,4 +1,4 @@
-# Jutsu constants test
+# Jutsu Constants Test
 a = 5
 print a
 b = 2
