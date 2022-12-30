@@ -1,0 +1,7 @@
+# Jutsu constants test
+a = 5
+print a
+b = 2
+print b
+c = a+b
+print c*3
