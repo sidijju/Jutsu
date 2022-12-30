@@ -48,7 +48,9 @@ class Tokenizer:
         'or': "OR",
         'and': "AND",
         'release': "RETURN",
-        'no jutsu': "DEFINE"
+        'no jutsu': "DEFINE",
+        'True': "TRUE",
+        'False': "FALSE"
     }
 
     def __init__(self):
@@ -145,8 +147,8 @@ class Tokenizer:
             self.tokenizeMultiCharSymbol, 
             self.tokenizeSymbol,
             self.tokenizeInteger,
-            self.tokenizeName,
-            self.tokenizeString
+            self.tokenizeString,
+            self.tokenizeName
         ]
 
         current = 0
