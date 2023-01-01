@@ -1,0 +1,16 @@
+# Jutsu Assignments Test
+
+x = 10
+z = x
+z += 2
+z += x
+z -= 2
+z -= x
+z *= 2
+z *= x
+z /= 2
+z /= x
+z //= 2
+z //= x
+z **= 2
+z **= x
