@@ -1,0 +1,17 @@
+a no jutsu () {
+  release 2
+}
+
+b no jutsu (argOne) {
+  release argOne * 2
+}
+
+c no jutsu (argOne, argTwo, argThree) {
+    x = argOne + argTwo
+    z = x * argThree
+    release z
+}
+
+a()
+b(1)
+c(1, 2, 3)
