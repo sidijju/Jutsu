@@ -22,7 +22,7 @@ class Parser:
 
     def __init__(self, tokens):
 
-        self.parseFunctions = {
+        self.parseExpressions = {
             "INT": self.parseInteger,
             "STRING": self.parseString,
             "NAME": self.parseName,
@@ -47,6 +47,9 @@ class Parser:
             "DIVEQ": self.parseAssignmentOp,
             "IDIVEQ": self.parseAssignmentOp,
             "DSTAREQ": self.parseAssignmentOp,
+        }
+
+        self.parseControls = {
             "DEFINE": self.parseDefinition
         }
 
@@ -57,22 +60,26 @@ class Parser:
             self.ast.push(node)
 
     def parseToken(self, tokens, current):
-        # TODO add other token types
+        # TODO add other token types and add parsing for NEWLINEs
         token = tokens[current]
-        if token.toktype in self.parseFunctions:
-            return self.parseFunctions[token.toktype](tokens, current)
+        if token.toktype in self.parseExpressions:
+            return self.parseExpression(tokens, current)
+        elif token.toktype in self.parseControls:
+            return self.parseControl(tokens, current)
         else:
             raise Exception("Invalid expression at %s during parsing" % (tokens[current]))
         
+    def parseExpression(self, tokens, current):
+        return self.parseExpressions[tokens[current].toktype](tokens, current)
+
+    def parseControl(self, tokens, current):
+        return self.parseControls[tokens[current].toktype](tokens, current)
+    
     def parseInteger(self, tokens, current):
         return current+1, ASTNode("Integer", tokens[current].value)
 
     def parseString(self, tokens, current):
         return current+1, ASTNode("String", tokens[current].value)
-
-    def parseExpression(self, tokens, current):
-        # TODO add expression parsing logic
-        raise NotImplementedError
 
     def parseArgs(self, tokens, current):
         current += 1 # skip left parentheses
