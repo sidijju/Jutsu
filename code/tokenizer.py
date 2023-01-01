@@ -50,7 +50,10 @@ class Tokenizer:
         'release': "RETURN",
         'no jutsu': "DEFINE",
         'True': "TRUE",
-        'False': "FALSE"
+        'False': "FALSE",
+        'if': "IF",
+        'elif': "ELIF",
+        'else': "ELSE"
     }
 
     def __init__(self):
@@ -75,6 +78,7 @@ class Tokenizer:
                 consumed += 1
             return consumed+1, None
         return 0, None
+        
 
     def tokenizeMultiCharSymbol(self, input, current):
         for symbol, tokentype in self.multicharSymbols.items():
