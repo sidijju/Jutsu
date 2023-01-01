@@ -13,11 +13,16 @@ Why not?
 
 ## Compatibility
 
-Jutsu requires no external dependencies. Jutsu requires Python, Pyinstaller (can be acquired using pip) and Make for installation. Jutsu has primarily been tested on MacOS.  
+Jutsu requires Python, Pyinstaller (can be acquired using pip) and Make for installation. Jutsu has only been tested on MacOS.  
 
 ## Implementation Details
 
-### Features
+### In Progress Features
+
+* Lists
+* For and While Loops
+
+### Implemented Features
 
 * Nothing yet
 
