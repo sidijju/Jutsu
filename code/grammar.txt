@@ -46,8 +46,8 @@ binary_primitive:
   | expression '>' expression
 
 atom:
-  | ID
-  | 'True'
-  | 'False'
+  | INT
   | STRING
-  | NUM
+  | NAME
+  | TRUE
+  | FALSE

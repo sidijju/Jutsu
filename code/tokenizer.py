@@ -8,52 +8,52 @@ class Token:
 class Tokenizer:
 
     leftlevels = {
-        '(': "LPAREN", 
-        '[': "LSQB", 
-        '{': "LCB"
+        '(': ("LPAREN", None),
+        '[': ("LSQB", None),
+        '{': ("LCB", None)
     }
 
     rightlevels = {
-        ')': "RPAREN", 
-        ']': "RSQB", 
-        '}': "RCB"
+        ')': ("RPAREN", None),
+        ']': ("RSQB", None),
+        '}': ("RCB", None)
     }
 
     symbols = {
-        ':': "COLON",
-        '+': "PLUS",
-        '-': "MINUS",
-        '*': "MULT",
-        '/': "DIV",
-        '%': "PERCENT",
-        '<': "LT",
-        '>': "GT",
-        '=': "EQ",
-        ',': "COMMA"
+        ':': ("COLON", None),
+        '+': ("BinaryOperation", "Plus"),
+        '-': ("BinaryOperation", "Minus"),
+        '*': ("BinaryOperation", "Mult"),
+        '/': ("BinaryOperation", "Div"),
+        '%': ("BinaryOperation", "Percent"),
+        '<': ("BinaryOperation", "Lt"),
+        '>': ("BinaryOperation", "Gt"),
+        '=': ("Assignment", "Eq"),
+        ',': ("COMMA", None)
     }
 
     multicharSymbols = {
-        '//': "IDIV",
-        '**': "DSTAR",
-        '==': "DEQ",
-        '!=': "NEQ",
-        '<=': "LEQ",
-        '>=': "GEQ",
-        '+=': "PLUSEQ",
-        '-=': "MINUSEQ",
-        '*=': "MULEQ",
-        '/=': "DIVEQ",
-        '//=': "IDIVEQ",
-        '**=': "DSTAREQ",
-        'or': "OR",
-        'and': "AND",
-        'release': "RETURN",
-        'no jutsu': "DEFINE",
-        'True': "TRUE",
-        'False': "FALSE",
-        'if': "IF",
-        'elif': "ELIF",
-        'else': "ELSE"
+        '//': ("BinaryOperation", "IDiv"),
+        '**': ("BinaryOperation", "Power"),
+        '==': ("BinaryOperation", "Deq"),
+        '!=': ("BinaryOperation", "Neq"),
+        '<=': ("BinaryOperation", "Leq"),
+        '>=': ("BinaryOperation", "Geq"),
+        '+=': ("Assignment", "PlusEq"),
+        '-=': ("Assignment", "MinusEq"),
+        '*=': ("Assignment", "MultEq"),
+        '/=': ("Assignment", "DivEq"),
+        '//=': ("Assignment", "IDivEq"),
+        '**=': ("Assignment", "PowerEq"),
+        'or': ("BinaryOperation", "Or"),
+        'and': ("BinaryOperation", "And"),
+        'release': ("UnaryOperation", "Return"),
+        'no jutsu': ("CompoundStatement", "DEFINE"),
+        'True': ("TRUE", True),
+        'False': ("FALSE", False),
+        'if': ("CompoundStatement", "IF"),
+        'elif': ("CompoundStatement", "ELIF"),
+        'else': ("CompoundStatement", "ELSE"),
     }
 
     def __init__(self):
@@ -81,25 +81,25 @@ class Tokenizer:
         
 
     def tokenizeMultiCharSymbol(self, input, current):
-        for symbol, tokentype in self.multicharSymbols.items():
+        for symbol, token in self.multicharSymbols.items():
             curr = input[current]
             consumed = 0
             while consumed < len(symbol) and symbol[consumed] == curr:
                 consumed += 1
                 curr = input[current + consumed]
             if consumed == len(symbol) and input[current:current+consumed] == symbol:
-                return consumed, Token(tokentype, symbol)
+                return consumed, Token(*token)
         return 0, None
 
     def tokenizeSymbol(self, input, current):
         if input[current] in self.symbols:
-            return 1, Token(self.symbols[input[current]], input[current])
+            return 1, Token(*self.symbols[input[current]])
         elif input[current] in self.leftlevels:
             self.level += 1
-            return 1, Token(self.leftlevels[input[current]], input[current])
+            return 1, Token(*self.leftlevels[input[current]])
         elif input[current] in self.rightlevels:
             self.level -= 1
-            return 1, Token(self.rightlevels[input[current]], input[current])
+            return 1, Token(*self.rightlevels[input[current]])
         return 0, None
     
     def tokenizeInteger(self, input, current):

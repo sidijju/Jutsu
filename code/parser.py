@@ -21,80 +21,91 @@ class ASTNode:
 class Parser:
 
     def __init__(self, tokens):
-
-        self.parseExpressions = {
-            "INT": self.parseInteger,
-            "STRING": self.parseString,
-            "NAME": self.parseName,
-            "PLUS": self.parseBinaryOp,
-            "MINUS": self.parseBinaryOp, 
-            "MULT": self.parseBinaryOp, 
-            "DIV": self.parseBinaryOp, 
-            "PERCENT": self.parseBinaryOp, 
-            "LT": self.parseBinaryOp, 
-            "GT": self.parseBinaryOp,  
-            "IDIV": self.parseBinaryOp,  
-            "DSTAR": self.parseBinaryOp,  
-            "DEQ": self.parseBinaryOp, 
-            "NEQ": self.parseBinaryOp, 
-            "LEQ": self.parseBinaryOp, 
-            "GEQ": self.parseBinaryOp, 
-            "OR": self.parseBinaryOp, 
-            "AND": self.parseBinaryOp, 
-            "EQ": self.parseAssignmentOp,
-            "PLUSEQ": self.parseAssignmentOp,
-            "MINUSEQ": self.parseAssignmentOp,
-            "DIVEQ": self.parseAssignmentOp,
-            "IDIVEQ": self.parseAssignmentOp,
-            "DSTAREQ": self.parseAssignmentOp,
-        }
-
-        self.parseControls = {
-            "DEFINE": self.parseDefinition
-        }
-
         self.ast = ASTNode("Program", "")
+        self.tokens = tokens
         current = 0
         while current < len(tokens):
-            current, node = self.parseToken(tokens, current)
-            self.ast.push(node)
+            current, node = self.parseStatement(current)
+            if node:
+                self.ast.push(node)
 
-    def parseToken(self, tokens, current):
-        # TODO add other token types and add parsing for NEWLINEs
-        token = tokens[current]
-        if token.toktype in self.parseExpressions:
-            return self.parseExpression(tokens, current)
-        elif token.toktype in self.parseControls:
-            return self.parseControl(tokens, current)
-        else:
-            raise Exception("Invalid expression at %s during parsing" % (tokens[current]))
+    def expect(self, current, toktype):
+        token = self.tokens[current]
+        if token.toktype != toktype:
+            raise Exception("Unexpected token during parsing - %s" % (self.tokens[current]))
+
+    def parseStatement(self, current):
+        # statement:
+        # | compound_stmt NEWLINE
+        # | simple_stmt NEWLINE
+        # | NEWLINE
+        try:
+            return self.parseCompoundStatement(current)
+        except Exception:
+            try:
+                return self.parseSimpleStatement(current)
+            except Exception:
+                self.expect(current, 'NEWLINE')
+                return current+1, None
         
-    def parseExpression(self, tokens, current):
-        return self.parseExpressions[tokens[current].toktype](tokens, current)
+    def parseSimpleStatement(self, current):
+        # simple_stmt:
+        # | assignment
+        # | expression
+        try:
+            return self.parseAssignment(current)
+        except Exception:
+            return self.parseExpression(current)
 
-    def parseControl(self, tokens, current):
-        return self.parseControls[tokens[current].toktype](tokens, current)
-    
-    def parseInteger(self, tokens, current):
-        return current+1, ASTNode("Integer", tokens[current].value)
+    def parseAssignment(self, current):
+        # assignment:
+        # | NAME '=' expression
+        # | NAME '+=' expression
+        # | NAME '-=' expression
+        # | NAME '*=' expression
+        # | NAME '/=' expression
+        # | NAME '//=' expression
+        # | NAME '**=' expression
+        
+        self.expect(current, 'NAME')
+        node = ASTNode("Assignment", "")
+        name = ASTNode("Variable", self.tokens[current].value)
+        node.push(name)   
+        op = self.tokens[current+1]
+        current, rexpr = self.parseExpression(current+2)  
+        if op.toktype != 'EQ':
+            opnode = ASTNode("BinaryOperation", op.value[:-2])
+            opnode.push(name)
+            opnode.push(rexpr)
+            node.push(opnode)
+        else:
+            node.push(rexpr)
+        return current, node
 
-    def parseString(self, tokens, current):
-        return current+1, ASTNode("String", tokens[current].value)
+    def parseExpression(self, current):
+        # expression:
+        # | unary_primitive
+        # | binary_primitive
+        # | atom
+        raise NotImplementedError
 
-    def parseArgs(self, tokens, current):
+    def parseCompoundStatement(self, current):
+        raise NotImplementedError                    
+
+    def parseArgs(self, current):
         current += 1 # skip left parentheses
-        curr = tokens[current]
+        curr = self.tokens[current]
         node = ASTNode("Args", "")
         if curr.toktype == 'RPAREN': # no argument case
             return node
 
         # parse first argument
-        current, arg = self.parseExpression(tokens, current)
+        current, arg = self.parseExpression(current)
         node.push(arg)
 
         # if there are more arguments, will be in comma separated list
         while curr.toktype == 'COMMA':
-            current, arg = self.parseExpression(tokens, current)
+            current, arg = self.parseExpression(current)
             node.push(arg)
             
         # if the token is not a comma, it should be the end of the list
@@ -102,43 +113,40 @@ class Parser:
             raise Exception("Invalid function arguments during parsing")
         return current+1, node 
 
-    def parseName(self, tokens, current):
-        if tokens[current+1].toktype == 'LPAREN':
-            node = ASTNode("Call", tokens[current].value)
-            current, args = self.parseArgs(tokens, current+1)
-            node.push(args)
-            return current, node
-        else:
-            return current+1, ASTNode("Variable", tokens[current].value)
-
-    def parseBinaryOp(self, tokens, current):
+    def parseBinaryOp(self, current):
         #TODO fix to account for order of operations
-        node = ASTNode("BinaryOperation", tokens[current].value)
-        current, rexpr = self.parseExpression(tokens, current+1)
+        node = ASTNode("BinaryOperation", self.tokens[current].value)
+        current, rexpr = self.parseExpression(current+1)
         lexpr = self.ast.pop()
         node.push(lexpr)
         node.push(rexpr)
         return current, node
 
-    def parseAssignmentOp(self, tokens, current):
-        node = ASTNode("Assignment", "")
-        lexpr = self.ast.peek()
-        node.push(lexpr)
-        op = tokens[current]
-        current, rexpr = self.parseExpression(tokens, current+1)  
-        if op.toktype != 'EQ':
-            opnode = ASTNode("BinaryOperation", op.value[:-2])
-            opnode.push(lexpr)
-            opnode.push(rexpr)
-            node.push(opnode)
-        else:
-            node.push(rexpr)
-        return current, node
-
-    def parseDefinition(self, tokens, current):
+    def parseDefinition(self, current):
         # TODO add function definition parsing logic
         raise NotImplementedError
     
-    def parseListBody(self, tokens, current):
+    def parseListBody(self, current):
         # TODO add list body parsing logic
         raise NotImplementedError
+
+    def parseAtom(self, current):
+        # atom:
+        # | INT
+        # | STRING
+        # | NAME
+        # | TRUE
+        # | FALSE
+        token = self.tokens[current]
+        if token.toktype == 'INT':
+            return current+1, ASTNode("Integer", token.value)
+        elif token.toktype == 'STRING':
+            return current+1, ASTNode("String", token.value)
+        elif token.toktype == 'NAME':
+            return current+1, ASTNode("Variable", token.value)
+        elif token.toktype == 'TRUE':
+            return current+1, ASTNode("Boolean", token.value)
+        elif token.toktype == 'FALSE':
+            return current+1, ASTNode("Boolean", token.value)
+        else:
+            raise Exception("Unexpected token during parsing - %s" % (token.value))
