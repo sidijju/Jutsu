@@ -1,6 +1,53 @@
+from enum import Enum
+
+class Type(Enum):
+    LPAREN = 0
+    LSQB = 1
+    LCB = 2
+    RPAREN = 3
+    RSQB = 4
+    RCB = 5
+    COLON = 6
+    NOT = 7
+    PLUS = 8
+    MINUS = 9
+    DIV = 10
+    PERCENT = 11
+    LT = 12
+    GT = 13
+    EQ = 14
+    COMMA = 15
+    DOT = 16
+    IDIV = 17
+    DSTAR = 18
+    DEQ = 19
+    NEQ = 20
+    LEQ = 21
+    GEQ = 22
+    OR = 23
+    AND = 24
+    PLUSEQ = 25
+    MINUSEQ = 26
+    MULTEQ = 27
+    DIVEQ = 28
+    IDIVEQ = 29
+    DSTAREQ = 30
+    DEFINE = 31
+    TRUE = 32
+    FALSE = 33
+    IF = 34
+    ELIF = 35
+    ELSE = 36
+    RETURN = 37
+    PRINT = 38
+    INT = 39
+    STRING = 40
+    NAME = 41
+    NEWLINE = 42
+    EOF = 43
 class Token:
-    def __init__(self, toktype, value):
-        self.toktype = toktype
+    def __init__(self, type, value):
+        self.type = type
         self.value = value
 
     def __repr__(self):
@@ -8,57 +55,56 @@ class Token:
             return "{" + self.toktype + ", " + self.value + "}"
         return "{" + self.toktype + "}"
 class Tokenizer:
-
     leftlevels = {
-        '(': "LPAREN",
-        '[': "LSQB",
-        '{': "LCB",
+        '(': Type.LPAREN,
+        '[': Type.LSQB,
+        '{': Type.LCB,
     }
 
     rightlevels = {
-        ')': "RPAREN",
-        ']': "RSQB",
-        '}': "RCB",
+        ')': Type.RPAREN,
+        ']': Type.RSQB,
+        '}': Type.RCB,
     }
 
     symbols = {
-        ':': "COLON",
-        '!': "NOT",
-        '+': "PLUS",
-        '-': "MINUS",
-        '*': "MULT",
-        '/': "DIV",
-        '%': "PERCENT",
-        '<': "LT",
-        '>': "GT",
-        '=': "EQ",
-        ',': "COMMA",
-        '.': "DOT"
+        ':': Type.COLON,
+        '!': Type.NOT,
+        '+': Type.PLUS,
+        '-': Type.MINUS,
+        '*': Type.MULT,
+        '/': Type.DIV,
+        '%': Type.PERCENT,
+        '<': Type.LT,
+        '>': Type.GT,
+        '=': Type.EQ,
+        ',': Type.COMMA,
+        '.': Type.DOT
     }
 
     multicharSymbols = {
-        '//': "IDIV",
-        '**': "DSTAR",
-        '==': "DEQ",
-        '!=': "NEQ",
-        '<=': "LEQ",
-        '>=': "GEQ",
-        'or': "OR",
-        'and': "AND",
-        '+=': "PLUSEQ",
-        '-=': "MINUSEQ",
-        '*=': "MULTEQ",
-        '/=': "DIVEQ",
-        '//=': "IDIVEQ",
-        '**=': "DSTAREQ",
-        'no jutsu': "DEFINE",
-        'True': "TRUE",
-        'False': "FALSE",
-        'if': "IF",
-        'elif': "ELIF",
-        'else': "ELSE",
-        'release': "RETURN",
-        'print': "PRINT"
+        '//': Type.IDIV,
+        '**': Type.DSTAR,
+        '==': Type.DEQ,
+        '!=': Type.NEQ,
+        '<=': Type.LEQ,
+        '>=': Type.GEQ,
+        'or': Type.OR,
+        'and': Type.AND,
+        '+=': Type.PLUSEQ,
+        '-=': Type.MINUSEQ,
+        '*=': Type.MULTEQ,
+        '/=': Type.DIVEQ,
+        '//=': Type.IDIVEQ,
+        '**=': Type.DSTAREQ,
+        'jutsu': Type.DEFINE,
+        'True': Type.TRUE,
+        'False': Type.FALSE,
+        'if': Type.IF,
+        'elif': Type.ELIF,
+        'else': Type.ELSE,
+        'release': Type.RETURN,
+        'print': Type.PRINT
     }
 
     def __init__(self):
@@ -75,7 +121,7 @@ class Tokenizer:
             return 1, None
         elif input[current] == '\n':
             if self.level == 0:
-                return 1, Token("NEWLINE", input[current])
+                return 1, Token(Type.NEWLINE, input[current])
             return 1, None
         elif input[current] == '#':
             consumed = 1
@@ -117,7 +163,7 @@ class Tokenizer:
             else:
                 break
         if consumed != 0:
-            return consumed, Token("INT", input[current:current+consumed])
+            return consumed, Token(Type.INT, input[current:current+consumed])
         return 0, None
 
     def tokenizeString(self, input, current):
@@ -131,7 +177,7 @@ class Tokenizer:
                 else:
                     break
             if curr == '"':
-                return consumed + 1, Token("STRING", input[current+1:current+consumed])
+                return consumed + 1, Token(Type.STRING, input[current+1:current+consumed])
             else:
                 return 0, None
         return 0, None
@@ -146,7 +192,7 @@ class Tokenizer:
             else:
                 break
         if consumed != 0:
-            return consumed, Token("NAME", input[current:current+consumed])
+            return consumed, Token(Type.NAME, input[current:current+consumed])
         return 0, None
 
     def tokenize(self, input):
@@ -175,5 +221,5 @@ class Tokenizer:
                     tokens.append(token)
             if not tokenized:
                 raise Exception("Unreadable or invalid character %c during tokenization" % (input[current]))
-        tokens.append(Token("EOF", None))
-        return tokens
+        tokens.append(Token(Type.EOF, None))
+        return tokens 

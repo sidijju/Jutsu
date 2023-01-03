@@ -32,18 +32,25 @@ expression:
   | atom
 
 unary_primitive:
-  | '!' expression
+  | unary_operator expression
   | 'print' expression
 
+unary_operator
+  | '!' | '-'
+
 binary_primitive:
-  | expression '+' expression
-  | expression '-' expression
-  | expression '*' expression
-  | expression '/' expression
-  | expression '==' expression
-  | expression '!=' expression
-  | expression '<' expression
-  | expression '>' expression
+  | binary_precedence(0)
+
+binary_precedence:
+  | binary_atom {binary_operator binary_precedence}
+
+binary_atom:
+  | unary_operator binary_precedence(q)
+  | '(' binary_primitive ')'
+  | atom
+
+binary_operator:
+'or' | 'and' | '+' | '-' | '*' | '/' | '//' | '%' | '**' | '==' | '!=' | '<' | '>' | '<=' | '>='
 
 atom:
   | INT
