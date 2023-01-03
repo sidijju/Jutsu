@@ -48,13 +48,14 @@ class Parser:
 
     def __init__(self, tokens):
         # program:
-        # | statement program
+        # | statement NEWLINE program
         # | EOF
         self.ast = ASTNode("Program", "")
         self.tokens = tokens
         self.line = 0
         while self.next():
             node = self.parseStatement()
+            self.expect(Type.NEWLINE)
             self.line += 1
             if node:
                 self.ast.push(node)
@@ -220,11 +221,7 @@ class Parser:
     
     def parseListBody(self):
         # TODO add list body parsing logic
-        raise NotImplementedError
-    
-    def parseCompoundStatement(self):
-        # TODO 
-        return None               
+        raise NotImplementedError           
 
     def parseArgs(self):
         self.consume() # skip left parentheses
