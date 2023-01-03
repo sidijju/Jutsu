@@ -53,7 +53,7 @@ class Parser:
         self.ast = ASTNode("Program", "")
         self.tokens = tokens
         self.line = 0
-        while self.next():
+        while self.next().type != Type.EOF:
             node = self.parseStatement()
             self.expect(Type.NEWLINE)
             self.line += 1
@@ -66,22 +66,22 @@ class Parser:
     def consume(self):
         return self.tokens.pop(0)
 
-    def accept(self, toktype):
+    def accept(self, type):
         token = self.next()
-        if token.toktype != toktype:
+        if token.type != type:
             return False
         else:
             return True
     
-    def expect(self, toktype):
+    def expect(self, type):
         token = self.next()
-        if token.toktype != toktype:
+        if token.type != type:
             raise Exception("Unexpected token during parsing at line %d" % (self.line))
         else:
             self.consume()
 
-    def associative(self, toktype):
-        if toktype == 'DSTAR':
+    def associative(self, type):
+        if type == Type.DSTAR:
             return 0
         return 1
 
@@ -129,7 +129,7 @@ class Parser:
             current, rexpr = self.parseExpression(current)
             op.push(rexpr)
             return current, op
-        elif self.tokens[current].toktype == 'PRINT':
+        elif self.tokens[current].type == Type.PRINT:
             node = ASTNode("UnaryOperation", "Print")
             current, rexpr = self.parseExpression(current+1)
             node.push(rexpr)
@@ -140,7 +140,7 @@ class Parser:
     def parseUnaryOperator(self):
         # unary_operator
         # | '!' | '-'
-        token = self.tokens[current].toktype
+        token = self.tokens[current].type
         if token in self.unaryPrecedenceTable:
             return current+1, ASTNode(token, self.unaryPrecedenceTable[token])
         return current, None
@@ -174,7 +174,7 @@ class Parser:
             current, rexpr = self.parseBinaryPrecedence(current, op.value)
             op.push(rexpr)
             return current, op
-        elif self.tokens[current].toktype == 'LPAREN':
+        elif self.tokens[current].type == Type.LPAREN:
             current, expr = self.parseBinaryPrimitive(current+1)
             self.expect(current, 'RPAREN')
             return current+1, expr
@@ -197,23 +197,19 @@ class Parser:
         # | TRUE
         # | FALSE
         token = self.next()
-        if token.toktype == 'INT':
+        nodemap = {
+            Type.INT: "Integer",
+            Type.STRING: "String",
+            Type.NAME: "Id",
+            Type.TRUE: "Boolean",
+            Type.FALSE: "Boolean"
+        }
+
+        if token.type in nodemap:
             self.consume()
-            return ASTNode("Integer", token.value)
-        elif token.toktype == 'STRING':
-            self.consume()
-            return ASTNode("String", token.value)
-        elif token.toktype == 'NAME':
-            self.consume()
-            return ASTNode("Id", token.value)
-        elif token.toktype == 'TRUE':
-            self.consume()
-            return ASTNode("Boolean", token.value)
-        elif token.toktype == 'FALSE':
-            self.consume()
-            return ASTNode("Boolean", token.value)
+            return ASTNode(nodemap[token.type], token.value)
         else:
-            return None
+            raise Exception("Unable to parse atom at line %d" % self.line)
 
     def parseDefinition(self):
         # TODO add function definition parsing logic
