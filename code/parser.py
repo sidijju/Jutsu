@@ -229,9 +229,9 @@ class Parser:
         node.push(self.parseExpression())
 
         # if there are more arguments, will be in comma separated list
-        while self.accept('COMMA'):
+        while self.accept(Type.COMMA):
             node.push(self.parseExpression())
             
         # if the token is not a comma, it should be the end of the list
-        self.expect('RPAREN')
+        self.expect(Type.RPAREN)
         return node 
