@@ -1,0 +1,6 @@
+a = True
+b = False
+c = !b
+print !a
+a = 3
+print a++

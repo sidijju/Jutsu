@@ -18,8 +18,10 @@ def usage():
 
 def execute(executor, text):
     tokens = Tokenizer().tokenize(text)
+    print("TOKENS")
     print(tokens)
     ast = Parser(tokens).ast
+    print("AST")
     print(ast)
     executor(ast, env)
 

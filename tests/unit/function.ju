@@ -1,12 +1,12 @@
-a no jutsu () {
+jutsu a() {
   release 2
 }
 
-b no jutsu (argOne) {
+jutsu b(argOne) {
   release argOne * 2
 }
 
-c no jutsu (argOne, argTwo, argThree) {
+jutsu c(argOne, argTwo, argThree) {
     x = argOne + argTwo
     z = x * argThree
     release z

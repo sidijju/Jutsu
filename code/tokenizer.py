@@ -4,7 +4,9 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        return "{" + self.toktype + ", " + self.value + "}"
+        if self.value:
+            return "{" + self.toktype + ", " + self.value + "}"
+        return "{" + self.toktype + "}"
 class Tokenizer:
 
     leftlevels = {
@@ -30,7 +32,8 @@ class Tokenizer:
         '<': "LT",
         '>': "GT",
         '=': "EQ",
-        ',': "COMMA"
+        ',': "COMMA",
+        '.': "DOT"
     }
 
     multicharSymbols = {
@@ -172,4 +175,5 @@ class Tokenizer:
                     tokens.append(token)
             if not tokenized:
                 raise Exception("Unreadable or invalid character %c during tokenization" % (input[current]))
+        tokens.append(Token("EOF", None))
         return tokens
