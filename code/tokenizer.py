@@ -39,6 +39,8 @@ class Tokenizer:
     }
 
     multicharSymbols = {
+        '//=': Type.IDIVEQ,
+        '**=': Type.DSTAREQ,
         '//': Type.IDIV,
         '**': Type.DSTAR,
         '==': Type.DEQ,
@@ -51,8 +53,6 @@ class Tokenizer:
         '-=': Type.MINUSEQ,
         '*=': Type.MULTEQ,
         '/=': Type.DIVEQ,
-        '//=': Type.IDIVEQ,
-        '**=': Type.DSTAREQ,
         'jutsu': Type.DEFINE,
         'True': Type.TRUE,
         'False': Type.FALSE,
