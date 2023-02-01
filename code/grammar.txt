@@ -3,17 +3,10 @@ program:
   | EOF
 
 statement:
-  | compound_stmt NEWLINE
-  | simple_stmt NEWLINE
-  | NEWLINE
-
-simple_stmt:
-  | assignment
+  | 'if' if_definition
+  | 'jutsu' function_definition
+  | 'release' expression
   | expression
-
-compound_stmt:
-  | function_def
-  | if_stmt
 
 function_def:
 

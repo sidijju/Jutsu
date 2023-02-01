@@ -91,7 +91,20 @@ class Parser:
         # | 'jutsu' function_definition
         # | 'release' expression
         # | expression
-        raise NotImplementedError
+        next = self.next()
+        print(next)
+        if next == Type.IF:
+            return self.parseIfStatement()
+        elif next == Type.DEFINE:
+            return self.parseDefinition()
+        elif next == Type.RETURN:
+            self.consume()
+            expr = self.parseExpression()
+            node = ASTNode("Return", "")
+            node.push(expr)
+            return node
+        else:
+            return self.parseExpression()
 
     def parseExpression(self):
         # expression:
@@ -103,21 +116,16 @@ class Parser:
             return self.parseAssignment(expr)
         return expr
 
-    def parseAssignment(self, assignee):
-        # assignment:
-        # ('=' | '+=' | '-=' | '*=' | '/=' | '//=' | '**=') expression
-        raise NotImplementedError
-
     def parseExpressionPrime(self):
         # expression_prime:
         # | unary_primitive
         # | binary_primitive
         # | atom
-        current, node = self.parseUnaryPrimitive(current)
+        current, node = self.parseUnaryPrimitive()
         if not node:
-            current, node = self.parseBinaryPrimitive(current)
+            current, node = self.parseBinaryPrimitive()
             if not node:
-                current, node = self.parseAtom(current)
+                current, node = self.parseAtom()
         return current, node
 
     def parseUnaryPrimitive(self):
@@ -210,6 +218,14 @@ class Parser:
             return ASTNode(nodemap[token.type], token.value)
         else:
             raise Exception("Unable to parse atom at line %d" % self.line)
+    
+    def parseAssignment(self, assignee):
+        # assignment:
+        # ('=' | '+=' | '-=' | '*=' | '/=' | '//=' | '**=') expression
+        raise NotImplementedError
+    
+    def parseIfStatement(self):
+        raise NotImplementedError
 
     def parseDefinition(self):
         # TODO add function definition parsing logic
