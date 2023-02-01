@@ -1,50 +1,6 @@
 from enum import Enum
-
 class Type(Enum):
-    LPAREN = 0
-    LSQB = 1
-    LCB = 2
-    RPAREN = 3
-    RSQB = 4
-    RCB = 5
-    COLON = 6
-    NOT = 7
-    PLUS = 8
-    MINUS = 9
-    DIV = 10
-    PERCENT = 11
-    LT = 12
-    GT = 13
-    EQ = 14
-    COMMA = 15
-    DOT = 16
-    IDIV = 17
-    DSTAR = 18
-    DEQ = 19
-    NEQ = 20
-    LEQ = 21
-    GEQ = 22
-    OR = 23
-    AND = 24
-    PLUSEQ = 25
-    MINUSEQ = 26
-    MULTEQ = 27
-    DIVEQ = 28
-    IDIVEQ = 29
-    DSTAREQ = 30
-    DEFINE = 31
-    TRUE = 32
-    FALSE = 33
-    IF = 34
-    ELIF = 35
-    ELSE = 36
-    RETURN = 37
-    PRINT = 38
-    INT = 39
-    STRING = 40
-    NAME = 41
-    NEWLINE = 42
-    EOF = 43
+    LPAREN, LSQB, LCB, RPAREN, RSQB, RCB, COLON, NOT, PLUS, MINUS, MULT, DIV, PERCENT, LT, GT, EQ, COMMA, DOT, IDIV, DSTAR, DEQ, NEQ, LEQ, GEQ, OR, AND, PLUSEQ, MINUSEQ, MULTEQ, DIVEQ, IDIVEQ, DSTAREQ, DEFINE, TRUE, FALSE, IF, ELIF, ELSE, RETURN, PRINT, INT, STRING, NAME, NEWLINE, EOF = range(45)
 class Token:
     def __init__(self, type, value):
         self.type = type
@@ -52,8 +8,8 @@ class Token:
 
     def __repr__(self):
         if self.value:
-            return "{" + self.toktype + ", " + self.value + "}"
-        return "{" + self.toktype + "}"
+            return "{" + self.type.name + ", " + self.value + "}"
+        return "{" + self.type.name + "}"
 class Tokenizer:
     leftlevels = {
         '(': Type.LPAREN,
@@ -130,7 +86,6 @@ class Tokenizer:
             return consumed+1, None
         return 0, None
         
-
     def tokenizeMultiCharSymbol(self, input, current):
         for symbol, token in self.multicharSymbols.items():
             curr = input[current]

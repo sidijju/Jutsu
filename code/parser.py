@@ -234,4 +234,4 @@ class Parser:
             
         # if the token is not a comma, it should be the end of the list
         self.expect(Type.RPAREN)
-        return node 
+        return node
