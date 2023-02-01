@@ -92,7 +92,10 @@ class Tokenizer:
             consumed = 0
             while consumed < len(symbol) and symbol[consumed] == curr:
                 consumed += 1
-                curr = input[current + consumed]
+                if current + consumed < len(input):
+                    curr = input[current + consumed]
+                else:
+                    return 0, None
             if consumed == len(symbol) and input[current:current+consumed] == symbol:
                 return consumed, Token(token, None)
         return 0, None
