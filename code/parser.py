@@ -6,9 +6,13 @@ class ASTNode:
         self.children = []
 
     def __repr__(self):
-        curr = "{" + self.nodetype + ", " + self.value + "}"
+        curr = "{" + self.nodetype + ", " + str(self.value) + "}"
         for c in self.children:
-            curr += "\n\t" + c.__repr__
+            s = c.__repr__()
+            s = s.split('\n')
+            s = ['\t' + line for line in s]
+            s = '\n'.join(s)
+            curr += "\n" + s
         return curr
 
     def push(self, node):
@@ -48,18 +52,18 @@ class Parser:
 
     def __init__(self, tokens):
         # program:
-        # | statement NEWLINE program
+        # | statement program
         # | EOF
         self.ast = ASTNode("Program", "")
         self.tokens = tokens
         self.line = 1
         while self.next().type != Type.EOF:
             node = self.parseStatement()
-            print(self.next())
-            self.expect(Type.NEWLINE)
             self.line += 1
             if node:
                 self.ast.push(node)
+            if self.accept(Type.NEWLINE):
+                continue
 
     def next(self):
         return self.tokens[0]
@@ -72,12 +76,13 @@ class Parser:
         if token.type != type:
             return False
         else:
+            self.consume()
             return True
     
     def expect(self, type):
-        token = self.next()
-        if token.type != type:
-            raise Exception("Unexpected token during parsing at line %d" % (self.line))
+        token = self.next().type
+        if token != type:
+            raise Exception("Unexpected token %s during parsing at line %d" % (token.name, self.line))
         else:
             self.consume()
 
@@ -90,8 +95,8 @@ class Parser:
         # statement:
         # | 'if' if_definition
         # | 'jutsu' function_definition
-        # | 'release' expression
-        # | expression
+        # | 'release' expression NEWLINE
+        # | expression NEWLINE
         next = self.next()
         if next.type == Type.IF:
             return self.parseIfStatement()
@@ -185,8 +190,7 @@ class Parser:
             rexpr = self.parseBinaryPrecedence(op.value)
             op.push(rexpr)
             return op
-        elif self.next().type == Type.LPAREN:
-            self.consume()
+        elif self.accept(Type.LPAREN):
             expr = self.parseBinaryPrimitive()
             self.expect(Type.RPAREN)
             return expr
@@ -198,6 +202,7 @@ class Parser:
         # 'or' | 'and' | '+' | '-' | '*' | '/' | '//' | '%' | '**' | '==' | '!=' | '<' | '>' | '<=' | '>='
         token = self.next().type
         if token in self.binaryPrecedenceTable:
+            self.consume()
             return ASTNode(token.name, self.binaryPrecedenceTable[token])
         return None
 
