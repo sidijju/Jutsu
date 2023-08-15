@@ -24,7 +24,8 @@ Jutsu requires Python, Pyinstaller (can be acquired using pip) and Make for inst
 
 ### Implemented Features
 
-* Nothing yet
+* Basic variable creation
+* Binary expression parsing
 
 ### Evaluation
 
