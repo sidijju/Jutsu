@@ -1,8 +1,8 @@
 from tokenizer import Type
 class ASTNode:
     """Represent node in AST (Abstract Symbol Tree)"""
-
-    def __init__(self, nodetype, value):
+    
+    def __init__(self, nodetype, value = ""):
         self.nodetype = nodetype
         self.value = value
         self.children = []
@@ -55,7 +55,7 @@ class Parser:
     assignmentTypes = [Type.EQ]
 
     def __init__(self, tokens):
-        self.ast = ASTNode("Program", "")
+        self.ast = ASTNode("Program")
         self.tokens = tokens
         self.line = 1
         self.parseProgram()
@@ -98,14 +98,15 @@ class Parser:
         if self.next().type != Type.EOF:
             node = self.parseStatement()
             self.line += 1
-            self.ast.push(node)
+            if node:
+                self.ast.push(node)
             if self.accept(Type.NEWLINE):
                 self.parseProgram()
 
     def parseStatement(self):
         # statement:
         # | NEWLINE
-        # | 'if' if_definition
+        # | 'if' if_statement
         # | 'jutsu' function_definition
         # | 'release' expression NEWLINE
         # | expression NEWLINE
@@ -119,11 +120,40 @@ class Parser:
         elif next.type == Type.RETURN:
             self.consume()
             expr = self.parseExpression()
-            node = ASTNode("Return", "")
+            node = ASTNode("Return")
             node.push(expr)
             return node
         else:
             return self.parseExpression()
+        
+    def parseBlock(self):
+        # block:
+        # | '{' block_prime
+        self.expect(Type.LCB)
+        node = ASTNode("Block")
+        self.parseBlockPrime(node)
+        return node
+    
+    def parseBlockPrime(self, node):
+        # block_prime:
+        # | statement block_prime
+        # | '}'
+        if self.next().type == Type.RCB:
+            self.consume()
+        else:
+            node.push(self.parseStatement())
+            self.parseBlockPrime(node)
+        
+    def parseIfStatement(self):
+        # if_statement:
+        # | 'if' expression block
+        self.expect(Type.IF)
+        expr = self.parseExpression()
+        block = self.parseBlock()
+        node = ASTNode("If")
+        node.push(expr)
+        node.push(block)
+        return node
 
     def parseExpression(self):
         # expression:
@@ -213,7 +243,7 @@ class Parser:
 
     def parseBinaryOperator(self):
         # binary_operator:
-        # 'or' | 'and' | '+' | '-' | '*' | '/' | '//' | '%' | '**' | '==' | '!=' | '<' | '>' | '<=' | '>='
+        # 'or' | 'and' | '+' | '-' | '*' | '/' | '//' | '%' | '**' | '==' | '!=' | '<' | '>'
         token = self.next().type
         if token in self.binaryPrecedenceTable:
             self.consume()
@@ -253,17 +283,14 @@ class Parser:
         if token == Type.EQ:
             node.push(expr)
             return node
-        elif token in [Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]:
-            op = ASTNode(token.name, "")
-            op.push(assignee)
-            op.push(expr)
-            node.push(op)
-            return node
+        # elif token in [Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]:
+        #     op = ASTNode(token.name, "")
+        #     op.push(assignee)
+        #     op.push(expr)
+        #     node.push(op)
+        #     return node
         else:
             raise Exception("Unable to parse line %d, unrecognized operator" % self.line)
-    
-    def parseIfStatement(self):
-        raise NotImplementedError
 
     def parseDefinition(self):
         # TODO add function definition parsing logic

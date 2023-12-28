@@ -22,6 +22,8 @@ Jutsu requires Python, Pyinstaller (can be acquired using pip) and Make for inst
 * Variable definition
     - Dynamically typed
     - Integer, string, boolean, and variable types
+* Control flow statements
+    - If
 * Function definition 
     - Multiline function definition without end-of-line token
 

@@ -1,8 +1,16 @@
 a = 2
 b = 3
+c = True
+d = False
+print c or d
+print c and d
 print a + b
 print a - b
 print a * b
 print a / b
 print a // b
 print a % b
+print a == b
+print a != b
+print a < b
+print a > b

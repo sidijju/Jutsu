@@ -3,7 +3,7 @@ This file documents all development changes to the Jutsu langauge.
 
 ## 12/27/2023
 
-Simplified initial grammar and token list for development purposes. 
+Simplified initial grammar and token list for development purposes. Added parser for if statements
 
 ## 9/14/2022
 

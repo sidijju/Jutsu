@@ -1,0 +1,5 @@
+# Jutsu Open Block Test
+# Parsing error is expected
+
+if 3 < 10 {
+    release 10
