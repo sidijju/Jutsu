@@ -1,5 +1,7 @@
 from tokenizer import Type
 class ASTNode:
+    """Represent node in AST (Abstract Symbol Tree)"""
+
     def __init__(self, nodetype, value):
         self.nodetype = nodetype
         self.value = value
@@ -53,29 +55,21 @@ class Parser:
     assignmentTypes = [Type.EQ]
 
     def __init__(self, tokens):
-        # program:
-        # | statement program
-        # | EOF
         self.ast = ASTNode("Program", "")
         self.tokens = tokens
         self.line = 1
-        while self.next().type != Type.EOF:
-            node = self.parseStatement()
-            self.line += 1
-            if node:
-                print("CHILD")
-                print(node)
-                self.ast.push(node)
-            if self.accept(Type.NEWLINE):
-                continue
+        self.parseProgram()
 
     def next(self):
+        """Peek the next token"""
         return self.tokens[0]
 
     def consume(self):
+        """Consume a token"""
         return self.tokens.pop(0)
 
     def accept(self, type):
+        """Accept a certain type for the next token"""
         token = self.next()
         if token.type != type:
             return False
@@ -84,6 +78,7 @@ class Parser:
             return True
     
     def expect(self, type):
+        """Expect a certain type for the next token"""
         token = self.next().type
         if token != type:
             raise Exception("Unexpected token %s during parsing at line %d" % (token.name, self.line))
@@ -94,6 +89,18 @@ class Parser:
         if type == Type.DSTAR:
             return 0
         return 1
+    
+    def parseProgram(self):
+        """Parse program"""
+        # program:
+        # | statement program
+        # | EOF
+        if self.next().type != Type.EOF:
+            node = self.parseStatement()
+            self.line += 1
+            self.ast.push(node)
+            if self.accept(Type.NEWLINE):
+                self.parseProgram()
 
     def parseStatement(self):
         # statement:
