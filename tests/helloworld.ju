@@ -1,3 +1,5 @@
 jutsu helloworld() {
-  release "Hello world"
+  print "Hello world"
 }
+
+helloworld()

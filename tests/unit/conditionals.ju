@@ -3,22 +3,9 @@ a = 3
 b = 5
 
 if a < 10 {
-    if b <= 5 {
-        if a > 7 {
-            print 2
-        } else {
-            print 3
-            if a >= b {
-                print a
-            } else {
-                if a == 0 {
-                    print b
-                } else {
-                    if a != 10 {
-                        print a
-                    }
-                }
-            }
-        }
-    }
+    release a
+}
+
+if b > 1 {
+    release b
 }
