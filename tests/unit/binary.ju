@@ -5,4 +5,4 @@ print a - b
 print a * b
 print a / b
 print a // b
-pring a % b
+print a % b
