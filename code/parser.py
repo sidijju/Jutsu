@@ -6,7 +6,11 @@ class ASTNode:
         self.children = []
 
     def __repr__(self):
-        curr = "{" + self.nodetype + ", " + str(self.value) + "}"
+        if self.value:
+            curr = "{" + self.nodetype + ", " + str(self.value) + "}"
+        else:
+            curr = "{" + self.nodetype + "}"
+
         for c in self.children:
             s = c.__repr__()
             s = s.split('\n')
@@ -31,9 +35,7 @@ class Parser:
         Type.DEQ: 3,
         Type.NEQ: 3,
         Type.LT: 3,
-        Type.LEQ: 3,
         Type.GT: 3,
-        Type.GEQ: 3,
         Type.PLUS: 4,
         Type.MINUS: 4,
         Type.MULT: 5,
@@ -48,7 +50,7 @@ class Parser:
         Type.MINUS: 6
     }
 
-    assignmentTypes = [Type.EQ, Type.DEQ, Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]
+    assignmentTypes = [Type.EQ]
 
     def __init__(self, tokens):
         # program:
@@ -61,6 +63,8 @@ class Parser:
             node = self.parseStatement()
             self.line += 1
             if node:
+                print("CHILD")
+                print(node)
                 self.ast.push(node)
             if self.accept(Type.NEWLINE):
                 continue
@@ -93,12 +97,15 @@ class Parser:
 
     def parseStatement(self):
         # statement:
+        # | NEWLINE
         # | 'if' if_definition
         # | 'jutsu' function_definition
         # | 'release' expression NEWLINE
         # | expression NEWLINE
         next = self.next()
-        if next.type == Type.IF:
+        if next.type == Type.NEWLINE:
+            return None
+        elif next.type == Type.IF:
             return self.parseIfStatement()
         elif next.type == Type.DEFINE:
             return self.parseDefinition()
@@ -116,7 +123,7 @@ class Parser:
         # | expression_prime {assignment}
         expr = self.parseExpressionPrime()
         if self.next().type in self.assignmentTypes:
-            if expr.nodetype != 'Id':
+            if expr.nodetype != 'Name':
                 raise Exception("Parsing error at line %d" % self.line)
             return self.parseAssignment(expr)
         return expr
@@ -157,8 +164,8 @@ class Parser:
         # unary_operator
         # | '!' | '-'
         if self.next().type in self.unaryPrecedenceTable:
-            token = self.consume()
-            return ASTNode(token, self.unaryPrecedenceTable[token])
+            token = self.consume().type
+            return ASTNode("UnaryOperation", token.name)  
         return None
 
     def parseBinaryPrimitive(self):
@@ -171,7 +178,7 @@ class Parser:
         # | binary_atom {binary_operator binary_precedence}
         node = self.parseBinaryAtom()
         op = self.parseBinaryOperator()
-        while op and op.value >= precedence:
+        if op and op.value >= precedence:
             nextPrecedence = self.associative(op.nodetype) + op.value
             rexpr = self.parseBinaryPrecedence(nextPrecedence)
             op.push(node)
@@ -217,7 +224,7 @@ class Parser:
         nodemap = {
             Type.INT: "Integer",
             Type.STRING: "String",
-            Type.NAME: "Id",
+            Type.NAME: "Name",
             Type.TRUE: "Boolean",
             Type.FALSE: "Boolean"
         }
@@ -226,12 +233,12 @@ class Parser:
             self.consume()
             return ASTNode(nodemap[token.type], token.value)
         else:
-            raise Exception("Unable to parse atom at line %d" % self.line)
+            raise Exception("Unable to parse atom %s at line %d" % (token.type.name, self.line))
     
     def parseAssignment(self, assignee):
         # assignment:
         # ('=' | '+=' | '-=' | '*=' | '/=' | '//=' | '**=') expression
-        assert assignee.nodetype == 'Id'
+        assert assignee.nodetype == 'Name'
         token = self.consume().type
         node = ASTNode("Assignment", "")
         node.push(assignee)
@@ -239,13 +246,14 @@ class Parser:
         if token == Type.EQ:
             node.push(expr)
             return node
-        elif token.type in [Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]:
+        elif token in [Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]:
             op = ASTNode(token.name, "")
             op.push(assignee)
             op.push(expr)
             node.push(op)
+            return node
         else:
-            raise Exception("Unable to parse atom at line %d, unrecognized operator" % self.line)
+            raise Exception("Unable to parse line %d, unrecognized operator" % self.line)
     
     def parseIfStatement(self):
         raise NotImplementedError

@@ -1,6 +1,10 @@
 # Jutsu Development Log
 This file documents all development changes to the Jutsu langauge.
 
+## 12/27/2023
+
+Simplified initial grammar and token list for development purposes. 
+
 ## 9/14/2022
 
 * Added help, verbose, compiler options and file input to driver. Added test option to Makefile.
