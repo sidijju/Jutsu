@@ -192,11 +192,8 @@ class Tokenizer:
         """Tokenize a user defined symbol (name)"""
 
         consumed = 0
-        while self.isalpha(self.input[current + consumed]):
-            if current + consumed + 1 < self.eof:
-                consumed += 1
-            else:
-                break
+        while current + consumed < self.eof and self.isalpha(self.input[current + consumed]):
+            consumed += 1
         if consumed != 0:
             return consumed, Token(Type.NAME, self.input[current:current+consumed])
         return 0, None
@@ -235,6 +232,7 @@ class Tokenizer:
                 if token:
                     tokens.append(token)
             if not tokenized:
-                raise Exception("Unreadable or invalid character %c during tokenization" % (input[current]))
+                print(self.eof)
+                raise Exception("Unreadable or invalid character %c at token %d during tokenization" % (self.input[current], current))
         tokens.append(Token(Type.EOF, None))
         return tokens 
