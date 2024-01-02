@@ -1,4 +1,29 @@
-from tokenizer import Type
+from tokenizer import Type, Token
+from enum import Enum
+
+class ASTNodeType(Enum):
+    Argument = 1
+    AssignStmt = 2
+    BinaryOp = 3
+    Body = 4
+    BooleanConst = 5
+    CallStmt = 6
+    ExitStmt = 7
+    Expr = 8
+    ForStmt = 9
+    IfStmt = 10
+    IntegerConst = 11
+    LoopStmt = 12
+    NilConst = 13
+    ReturnStmt = 14
+    Stmt = 15
+    StringConst = 16
+    UnaryOp = 17
+    VarDecl = 18
+    Variable = 19
+    WhileStmt = 20
+    Node = 21
+
 class ASTNode:
     """Represent node in AST (Abstract Symbol Tree)"""
     
@@ -55,35 +80,44 @@ class Parser:
     assignmentTypes = [Type.EQ]
 
     def __init__(self, tokens):
-        self.ast = ASTNode("Program")
+        self.ast = ASTNode(ASTNodeType.Node)
         self.tokens = tokens
         self.line = 1
         self.parseProgram()
 
-    def next(self):
+    def next(self) -> Token:
         """Peek the next token"""
         return self.tokens[0]
 
-    def consume(self):
+    def consume(self) -> Token:
         """Consume a token"""
         return self.tokens.pop(0)
 
     def accept(self, type):
-        """Accept a certain type for the next token"""
+        """Accept a certain type or types for the next token"""
         token = self.next()
         if token.type != type:
             return False
         else:
             self.consume()
             return True
+        
+    def accept(self, types):
+        """Accept any type in types for the next token"""
+        token = self.next()
+        if token.type not in types:
+            return False
+        else:
+            self.consume()
+            return True
     
-    def expect(self, type):
+    def expect(self, type) -> Token:
         """Expect a certain type for the next token"""
         token = self.next().type
         if token != type:
             raise Exception("Unexpected token %s during parsing at line %d" % (token.name, self.line))
         else:
-            self.consume()
+            return self.consume()
 
     def associative(self, type):
         if type == Type.DSTAR:
@@ -93,9 +127,11 @@ class Parser:
     def parseProgram(self):
         """Parse program"""
         # program:
-        # | statement program
-        # | EOF
-        if self.next().type != Type.EOF:
+        # | [stmt+] EOF
+
+        # recursive implementation so we don't have
+        # infinite loop if theres no EOF token
+        if not self.accept(Type.EOF):
             node = self.parseStatement()
             self.line += 1
             if node:
@@ -104,151 +140,267 @@ class Parser:
                 self.parseProgram()
 
     def parseStatement(self):
-        # statement:
-        # | NEWLINE
-        # | 'if' if_statement
-        # | 'jutsu' function_definition
-        # | 'release' expression NEWLINE
-        # | expression NEWLINE
-        next = self.next()
-        if next.type == Type.NEWLINE:
-            return None
-        elif next.type == Type.IF:
-            return self.parseIfStatement()
-        elif next.type == Type.DEFINE:
-            return self.parseDefinition()
-        elif next.type == Type.RETURN:
-            self.consume()
-            expr = self.parseExpression()
-            node = ASTNode("Return")
-            node.push(expr)
+        # stmt:
+        # | simple_stmt
+        # | compound_stmt
+        node = self.parseSimpleStatement()
+        return node if node else self.parseCompoundStatement()
+        
+    def parseSimpleStatement(self):
+        # simple_stmt:
+        # | assignment
+        # | return_stmt
+
+        try:
+            return self.parseAssignment()
+        except:
+            pass
+
+        try:
+            return self.parseReturnStatement()
+        except:
+            pass
+
+        raise Exception("Unexpected token %s during parsing at line %d" % (next, self.line))
+
+    def parseAssignment(self):
+        # assignment:
+        # NAME '=' expression
+        # NAME augassign expression
+        var = self.expect(Type.NAME)
+        node = ASTNode(ASTNodeType.AssignStmt)
+        varnode = ASTNode(ASTNodeType.Variable, var.name)
+        node.push(var)
+        if self.accept(Type.EQ):
+            node.push(self.parseExpression())
             return node
         else:
-            return self.parseExpression()
-        
-    def parseBlock(self):
-        # block:
-        # | '{' block_prime
-        self.expect(Type.LCB)
-        node = ASTNode("Block")
-        self.parseBlockPrime(node)
+            op = self.parseAugAssign()
+            if op:
+                op.push(varnode)
+                op.push(self.parseExpression())
+                node.push(op)
+                return node
+        raise Exception("Unable to parse line %d, unrecognized operator" % self.line)
+
+    def parseAugAssign(self):
+        # augassign:
+        # | '+=' 
+        # | '-=' 
+        # | '*=' 
+        # | '/=' 
+        # | '//=' 
+        # | '**='
+        next = self.next()
+        if self.accept([Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]):
+            op = ASTNode(ASTNodeType.BinaryOp, next.name)
+            return op
+
+    def parseReturnStatement(self):
+        # return_stmt:
+        # 'release' expression
+        self.expect(Type.RETURN)
+        expr = self.parseExpression()
+        node = ASTNode(ASTNodeType.ReturnStmt)
+        node.push(expr)
         return node
-    
-    def parseBlockPrime(self, node):
-        # block_prime:
-        # | statement block_prime
-        # | '}'
-        if self.next().type == Type.RCB:
-            self.consume()
+
+    def parseCompoundStatement(self):
+        # compound_stmt:
+        # | function_def
+        # | if_stmt
+        if self.accept(Type.DEFINE):
+            return self.parseFunctionDefinition()
+        elif self.accept(Type.IF):
+            return self.parseIfStatement()
         else:
-            node.push(self.parseStatement())
-            self.parseBlockPrime(node)
-        
+            raise Exception("Unexpected token %s during parsing at line %d" % (next, self.line))
+
+    def parseFunctionDefinition(self):
+        # TODO add function definition parsing logic
+        raise NotImplementedError
+
     def parseIfStatement(self):
         # if_statement:
-        # | 'if' expression block
+        # | 'if' expression body
         self.expect(Type.IF)
         expr = self.parseExpression()
-        block = self.parseBlock()
-        node = ASTNode("If")
+        block = self.parseBody()
+        node = ASTNode(ASTNodeType.IfStmt)
         node.push(expr)
         node.push(block)
         return node
+    
+    def parseBody(self):
+        # body:
+        # | '{' body_prime
+        self.expect(Type.LCB)
+        node = ASTNode(ASTNodeType.Body)
+        self.parseBlockPrime(node)
+        return node
+    
+    def parseBodyPrime(self, node):
+        # body_prime:
+        # | statement body_prime
+        # | '}'
+        if self.accect(Type.RCB):
+            self.consume()
+        else:
+            node.push(self.parseStatement())
+            self.parseBodyPrime(node)
 
     def parseExpression(self):
         # expression:
-        # | expression_prime {assignment}
-        expr = self.parseExpressionPrime()
-        if self.next().type in self.assignmentTypes:
-            if expr.nodetype != 'Name':
-                raise Exception("Parsing error at line %d" % self.line)
-            return self.parseAssignment(expr)
-        return expr
-
-    def parseExpressionPrime(self):
-        # expression_prime:
-        # | unary_primitive
-        # | binary_primitive
-        # | atom
-        node = self.parseUnaryPrimitive()
-        if not node:
-            node = self.parseBinaryPrimitive()
-            if not node:
-                node = self.parseAtom()
-        if not node:
-            raise Exception("Parsing error at line %d" % self.line)
+        # | disjunction
+        node = ASTNode(ASTNodeType.Expr)
+        node.push(self.parseDisjunction())
         return node
 
-    def parseUnaryPrimitive(self):
-        # unary_primitive:
-        # | unary_operator expression
-        # | 'print' expression
-        op = self.parseUnaryOperator()
-        if op:
-            rexpr = self.parseExpression()
-            op.push(rexpr)
-            return op
-        elif self.next().type == Type.PRINT:
-            self.consume()
-            node = ASTNode("UnaryOperation", "Print")
-            rexpr = self.parseExpression()
-            node.push(rexpr)
+    def parseDisjunction(self):
+        # disjunction:
+        # | conjunction ('or' conjunction)+
+        # | conjunction
+        conj = self.parseConjunction()
+        if self.accept(Type.OR):
+            node = ASTNode(ASTNodeType.BinaryOp, 'Or')
+            right_conj = self.parseConjunction()
+            node.push(conj)
+            node.push(right_conj)
+
+            while self.accept(Type.OR):
+                outer_node = ASTNode(ASTNodeType.BinaryOp, 'Or')
+                right_conj = self.parseConjunction()
+                outer_node.push(node)
+                outer_node.push(right_conj)
+                node = outer_node
             return node
         else:
-            return None
+            return conj
 
-    def parseUnaryOperator(self):
-        # unary_operator
-        # | '!' | '-'
-        if self.next().type in self.unaryPrecedenceTable:
-            token = self.consume().type
-            return ASTNode("UnaryOperation", token.name)  
-        return None
+    def parseConjunction(self):
+        # conjunction:
+        # | inversion ('and' inversion)+
+        # | inversion
+        inv = self.parseInversion()
+        if self.accept(Type.AND):
+            node = ASTNode(ASTNodeType.BinaryOp, 'And')
+            right_inv = self.parseInversion()
+            node.push(inv)
+            node.push(right_inv)
 
-    def parseBinaryPrimitive(self):
-        # binary_primitive:
-        # | binary_precedence(0)
-        return self.parseBinaryPrecedence(0)
-
-    def parseBinaryPrecedence(self, precedence):
-        # binary_precedence:
-        # | binary_atom {binary_operator binary_precedence}
-        node = self.parseBinaryAtom()
-        op = self.parseBinaryOperator()
-        if op and op.value >= precedence:
-            nextPrecedence = self.associative(op.nodetype) + op.value
-            rexpr = self.parseBinaryPrecedence(nextPrecedence)
-            op.push(node)
-            op.push(rexpr)
-            node = op
-            op = self.parseBinaryOperator()
-        return node
-
-    def parseBinaryAtom(self):
-        # binary_atom:
-        # | unary_operator binary_precedence(q)
-        # | '(' binary_primitive ')'
-        # | atom
-        op = self.parseUnaryOperator()
-        if op:
-            rexpr = self.parseBinaryPrecedence(op.value)
-            op.push(rexpr)
-            return op
-        elif self.accept(Type.LPAREN):
-            expr = self.parseBinaryPrimitive()
-            self.expect(Type.RPAREN)
-            return expr
+            while self.accept(Type.AND):
+                outer_node = ASTNode(ASTNodeType.BinaryOp, 'And')
+                right_inv = self.parseInversion()
+                outer_node.push(node)
+                outer_node.push(right_inv)
+                node = outer_node
+            return node
         else:
-            return self.parseAtom()
+            return inv
 
+    def parseInversion(self):
+        # inversion:
+        # | 'not' inversion 
+        # | binary_op
+        if self.accept(Type.NOT):
+            node = ASTNode(ASTNodeType.UnaryOp, 'Not')
+            node.push(self.parseInversion())
+        return self.parseBinaryOperator()
+    
     def parseBinaryOperator(self):
-        # binary_operator:
-        # 'or' | 'and' | '+' | '-' | '*' | '/' | '//' | '%' | '**' | '==' | '!=' | '<' | '>'
-        token = self.next().type
-        if token in self.binaryPrecedenceTable:
-            self.consume()
-            return ASTNode(token.name, self.binaryPrecedenceTable[token])
-        return None
+        return self.parseSum()
+    
+    def parseSum(self):
+        # sum:
+        # | sum '+' term
+        # | sum '-' term
+        # | term
+        raise NotImplementedError
+
+    # def parseExpression(self):
+    #     # expression_prime:
+    #     # | unary_primitive
+    #     # | binary_primitive
+    #     # | atom
+    #     node = self.parseUnaryPrimitive()
+    #     if not node:
+    #         node = self.parseBinaryPrimitive()
+    #         if not node:
+    #             node = self.parseAtom()
+    #     if not node:
+    #         raise Exception("Parsing error at line %d" % self.line)
+    #     return node
+
+    # def parseUnaryPrimitive(self):
+    #     # unary_primitive:
+    #     # | unary_operator expression
+    #     # | 'print' expression
+    #     op = self.parseUnaryOperator()
+    #     if op:
+    #         rexpr = self.parseExpression()
+    #         op.push(rexpr)
+    #         return op
+    #     elif self.next().type == Type.PRINT:
+    #         self.consume()
+    #         node = ASTNode(ASTNodeType.UnaryOp, "Print")
+    #         rexpr = self.parseExpression()
+    #         node.push(rexpr)
+    #         return node
+    #     else:
+    #         return None
+
+    # def parseUnaryOperator(self):
+    #     # unary_operator
+    #     # | '!' | '-'
+    #     if self.next().type in self.unaryPrecedenceTable:
+    #         token = self.consume().type
+    #         return ASTNode(ASTNodeType.UnaryOp, token.name)  
+    #     return None
+
+    # def parseBinaryPrimitive(self):
+    #     # binary_primitive:
+    #     # | binary_precedence(0)
+    #     return self.parseBinaryPrecedence(0)
+
+    # def parseBinaryPrecedence(self, precedence):
+    #     # binary_precedence:
+    #     # | binary_atom {binary_operator binary_precedence}
+    #     node = self.parseBinaryAtom()
+    #     op = self.parseBinaryOperator()
+    #     if op and op.value >= precedence:
+    #         nextPrecedence = self.associative(op.nodetype) + op.value
+    #         rexpr = self.parseBinaryPrecedence(nextPrecedence)
+    #         op.push(node)
+    #         op.push(rexpr)
+    #         node = op
+    #         op = self.parseBinaryOperator()
+    #     return node
+
+    # def parseBinaryAtom(self):
+    #     # binary_atom:
+    #     # | unary_operator binary_precedence(q)
+    #     # | '(' binary_primitive ')'
+    #     # | atom
+    #     op = self.parseUnaryOperator()
+    #     if op:
+    #         rexpr = self.parseBinaryPrecedence(op.value)
+    #         op.push(rexpr)
+    #         return op
+    #     elif self.accept(Type.LPAREN):
+    #         expr = self.parseBinaryPrimitive()
+    #         self.expect(Type.RPAREN)
+    #         return expr
+    #     else:
+    #         return self.parseAtom()
+
+    # def parseBinaryOperator(self):
+    #     # binary_operator:
+    #     # 'or' | 'and' | '+' | '-' | '*' | '/' | '//' | '%' | '**' | '==' | '!=' | '<' | '>'
+    #     token = self.next().type
+    #     if token in self.binaryPrecedenceTable:
+    #         self.consume()
+    #         return ASTNode(ASTNodeType.BinaryOp, token.name)
+    #     return None
 
     def parseAtom(self):
         # atom:
@@ -259,11 +411,11 @@ class Parser:
         # | FALSE
         token = self.next()
         nodemap = {
-            Type.INT: "Integer",
-            Type.STRING: "String",
-            Type.NAME: "Name",
-            Type.TRUE: "Boolean",
-            Type.FALSE: "Boolean"
+            Type.INT: ASTNodeType.IntegerConst,
+            Type.STRING: ASTNodeType.StringConst,
+            Type.NAME: ASTNodeType.Variable,
+            Type.TRUE: ASTNodeType.BooleanConst,
+            Type.FALSE: ASTNodeType.BooleanConst
         }
 
         if token.type in nodemap:
@@ -271,30 +423,6 @@ class Parser:
             return ASTNode(nodemap[token.type], token.value)
         else:
             raise Exception("Unable to parse atom %s at line %d" % (token.type.name, self.line))
-    
-    def parseAssignment(self, assignee):
-        # assignment:
-        # ('=' | '+=' | '-=' | '*=' | '/=' | '//=' | '**=') expression
-        assert assignee.nodetype == 'Name'
-        token = self.consume().type
-        node = ASTNode("Assignment", "")
-        node.push(assignee)
-        expr = self.parseExpression()
-        if token == Type.EQ:
-            node.push(expr)
-            return node
-        # elif token in [Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]:
-        #     op = ASTNode(token.name, "")
-        #     op.push(assignee)
-        #     op.push(expr)
-        #     node.push(op)
-        #     return node
-        else:
-            raise Exception("Unable to parse line %d, unrecognized operator" % self.line)
-
-    def parseDefinition(self):
-        # TODO add function definition parsing logic
-        raise NotImplementedError
     
     def parseListBody(self):
         # TODO add list body parsing logic
