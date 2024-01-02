@@ -92,17 +92,8 @@ class Parser:
     def consume(self) -> Token:
         """Consume a token"""
         return self.tokens.pop(0)
-
-    def accept(self, type):
-        """Accept a certain type or types for the next token"""
-        token = self.next()
-        if token.type != type:
-            return False
-        else:
-            self.consume()
-            return True
         
-    def accept(self, types):
+    def accept(self, *types):
         """Accept any type in types for the next token"""
         token = self.next()
         if token.type not in types:
@@ -161,7 +152,7 @@ class Parser:
         except:
             pass
 
-        raise Exception("Unexpected token %s during parsing at line %d" % (next, self.line))
+        raise Exception("Unexpected token %s during parsing at line %d" % (self.next(), self.line))
 
     def parseAssignment(self):
         # assignment:
@@ -192,7 +183,7 @@ class Parser:
         # | '//=' 
         # | '**='
         next = self.next()
-        if self.accept([Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ]):
+        if self.accept(Type.PLUSEQ, Type.MINUSEQ, Type.MULTEQ, Type.DIVEQ, Type.IDIVEQ, Type.DSTAREQ):
             op = ASTNode(ASTNodeType.BinaryOp, next.name)
             return op
 
