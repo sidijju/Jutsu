@@ -22,6 +22,14 @@ test-build:
 	@find ./tests -type f -name '*.ju' -exec jutsu {} \; 
 
 test:
-	@echo "Test Jutsu Build"
-	@find ./tests -type f -name '*.ju' -exec python code/driver.py {} \; 
+	@echo "Execute Full Jutsu Test Suite"
+	@find ./tests/unit -type f -name '*.ju' -exec python code/driver.py {} \; 
+
+test-unit:
+	@echo "Execute Jutsu Unit Tests"
+	@find ./tests/unit -type f -name '*.ju' -exec python code/driver.py {} \; 
+
+test-error:
+	@echo "Execute Jutsu Error Handling Tests"
+	@find ./tests/error_handling -type f -name '*.ju' -exec python code/driver.py {} \; 
 	

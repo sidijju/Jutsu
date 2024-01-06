@@ -38,10 +38,19 @@ class Type(Enum):
     EOF = 34
     DEQ = 35
     NEQ = 36
+    PLUSEQ = 37
+    MINUSEQ = 38
+    MULTEQ = 39
+    DIVEQ = 40
+    IDIVEQ = 41
+    DSTAREQ = 42
+    LEQ = 43
+    GEQ = 44
 class Token:
-    def __init__(self, type, value):
+    def __init__(self, type, value, line):
         self.type = type
         self.value = value
+        self.line = line
 
     def __repr__(self):
         if self.value:
@@ -88,19 +97,20 @@ class Tokenizer:
         'else': Type.ELSE,
         'release': Type.RETURN,
         'print': Type.PRINT,
-        # '+=': Type.PLUSEQ,
-        # '-=': Type.MINUSEQ,
-        # '*=': Type.MULTEQ,
-        # '/=': Type.DIVEQ,
-        # '//=': Type.IDIVEQ,
-        # '**=': Type.DSTAREQ,
-        # '==': Type.DEQ,
-        # '!=': Type.NEQ,
-        # '<=': Type.LEQ,
-        # '>=': Type.GEQ
+        '+=': Type.PLUSEQ,
+        '-=': Type.MINUSEQ,
+        '*=': Type.MULTEQ,
+        '/=': Type.DIVEQ,
+        '//=': Type.IDIVEQ,
+        '**=': Type.DSTAREQ,
+        '==': Type.DEQ,
+        '!=': Type.NEQ,
+        '<=': Type.LEQ,
+        '>=': Type.GEQ
     }
 
     def __init__(self, input):
+        self.line = 0
         self.level = 0
         self.input = input
         self.eof = len(self.input)
@@ -117,7 +127,8 @@ class Tokenizer:
             return 1, None
         elif self.input[current] == '\n':
             if self.level == 0:
-                return 1, Token(Type.NEWLINE, None)
+                self.line += 1
+                return 1, Token(Type.NEWLINE, None, self.line - 1)
             return 1, None
         elif self.input[current] == '#':
             consumed = 1
@@ -139,20 +150,20 @@ class Tokenizer:
                 else:
                     return 0, None
             if consumed == len(symbol) and self.input[current:current+consumed] == symbol:
-                return consumed, Token(token, None)
+                return consumed, Token(token, None, self.line)
         return 0, None
 
     def tokenizeSymbol(self, current):
         """Tokenize a symbol"""
 
         if self.input[current] in self.symbols:
-            return 1, Token(self.symbols[self.input[current]], None)
+            return 1, Token(self.symbols[self.input[current]], None, self.line)
         elif self.input[current] in self.leftlevels:
             self.level += 1
-            return 1, Token(self.leftlevels[self.input[current]], None)
+            return 1, Token(self.leftlevels[self.input[current]], None, self.line)
         elif self.input[current] in self.rightlevels:
             self.level -= 1
-            return 1, Token(self.rightlevels[self.input[current]], None)
+            return 1, Token(self.rightlevels[self.input[current]], None, self.line)
         return 0, None
     
     def tokenizeInteger(self, current):
@@ -167,7 +178,7 @@ class Tokenizer:
             else:
                 break
         if consumed != 0:
-            return consumed, Token(Type.INT, self.input[current:current+consumed])
+            return consumed, Token(Type.INT, self.input[current:current+consumed], self.line)
         return 0, None
 
     def tokenizeString(self, current):
@@ -183,7 +194,7 @@ class Tokenizer:
                 else:
                     break
             if curr == '"':
-                return consumed + 1, Token(Type.STRING, self.input[current+1:current+consumed])
+                return consumed + 1, Token(Type.STRING, self.input[current+1:current+consumed], self.line)
             else:
                 return 0, None
         return 0, None
@@ -195,7 +206,7 @@ class Tokenizer:
         while current + consumed < self.eof and self.isalpha(self.input[current + consumed]):
             consumed += 1
         if consumed != 0:
-            return consumed, Token(Type.NAME, self.input[current:current+consumed])
+            return consumed, Token(Type.NAME, self.input[current:current+consumed], self.line)
         return 0, None
 
     def tokenize(self):
@@ -234,5 +245,5 @@ class Tokenizer:
             if not tokenized:
                 print(self.eof)
                 raise Exception("Unreadable or invalid character %c at token %d during tokenization" % (self.input[current], current))
-        tokens.append(Token(Type.EOF, None))
+        tokens.append(Token(Type.EOF, None, self.line))
         return tokens 
