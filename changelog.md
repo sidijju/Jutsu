@@ -1,5 +1,9 @@
 # Jutsu Development Log
-This file documents all development changes to the Jutsu langauge.
+This file documents all development changes to the Jutsu language.
+
+## 1/6/2023
+
+Completed rudimentary binary operation parsing w/ precedence.
 
 ## 12/27/2023
 
