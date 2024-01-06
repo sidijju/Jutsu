@@ -110,10 +110,13 @@ class Tokenizer:
     }
 
     def __init__(self, input):
-        self.line = 0
+        self.line = 1
         self.level = 0
         self.input = input
         self.eof = len(self.input)
+
+    def isvalidchar(self, char):
+        return self.isalpha(char) or ord(char) == 95
 
     def isalpha(self, char):
         return (ord(char) >= 65 and ord(char) <= 90) or (ord(char) >= 97 and ord(char) <= 122)
@@ -134,6 +137,7 @@ class Tokenizer:
             consumed = 1
             while current + consumed < self.eof and self.input[current+consumed] != '\n':
                 consumed += 1
+            self.line += 1
             return consumed+1, None
         return 0, None
         
@@ -203,7 +207,7 @@ class Tokenizer:
         """Tokenize a user defined symbol (name)"""
 
         consumed = 0
-        while current + consumed < self.eof and self.isalpha(self.input[current + consumed]):
+        while current + consumed < self.eof and self.isvalidchar(self.input[current + consumed]):
             consumed += 1
         if consumed != 0:
             return consumed, Token(Type.NAME, self.input[current:current+consumed], self.line)

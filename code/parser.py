@@ -116,7 +116,7 @@ class Parser:
         self.current = self.backtrack
 
     def error(self):
-        raise Exception("Error while parsing token %s at line %d", self.next(), self.next().line)
+        raise Exception("Error while parsing token %s at line %d" % (self.next(), self.next().line))
     
     def parseProgram(self):
         """Parse program"""
@@ -127,7 +127,8 @@ class Parser:
             node = self.parseStatement()
             if node:
                 self.ast.push(node)
-            self.accept(Type.NEWLINE)
+            if not self.atEnd() and not self.accept(Type.NEWLINE):
+                self.error()
 
     def parseStatement(self):
         # stmt:
@@ -264,15 +265,17 @@ class Parser:
         # | statement body_prime
         # | '}'
         if not self.accept(Type.RCB):
-            node.push(self.parseStatement())
-            self.parseBodyPrime(node)
+            statement = self.parseStatement()
+            if statement:
+                node.push(statement)
+                self.parseBodyPrime(node)
 
     def parseExpression(self):
         # expression:
         # | disjunction
-        node = ASTNode(ASTNodeType.Expr)
         disj = self.parseDisjunction()
         if disj:
+            node = ASTNode(ASTNodeType.Expr)
             node.push(disj)
             return node
 
@@ -337,6 +340,17 @@ class Parser:
             return_op = compare_op
             compare_op = self.parseComparisonOperator()
         return return_op
+    
+    def parseComparisonOperator(self):
+        # compare_op:
+        # | '=='
+        # | '!='
+        # | '<='
+        # | '<'
+        # | '>='
+        # | '>'
+        if self.accept(Type.DEQ, Type.NEQ, Type.LEQ, Type.LT, Type.GEQ, Type. GT):
+            return ASTNode(ASTNodeType.BinaryOp, self.previous().type)
 
     def parseSum(self):
         # sum:
@@ -419,26 +433,37 @@ class Parser:
     
     def parsePower(self):
         # power:
-        # | atom '**' factor
-        # | atom
-        atom = self.parseAtom()
+        # | primary '**' factor
+        # | primary
+        atom = self.parsePrimary()
         if self.accept(Type.DSTAR):
             node = ASTNode(ASTNodeType.BinaryOp, self.previous().type)
             node.push(atom)
             node.push(self.parseFactor())
             return node
         return atom
-
-    def parseComparisonOperator(self):
-        # compare_op:
-        # | '=='
-        # | '!='
-        # | '<='
-        # | '<'
-        # | '>='
-        # | '>'
-        if self.accept(Type.DEQ, Type.NEQ, Type.LEQ, Type.LT, Type.GEQ, Type. GT):
-            return ASTNode(ASTNodeType.BinaryOp, self.previous().type)
+    
+    def parsePrimary(self):
+        # primary:
+        # | NAME '(' expression+ ')'
+        # | atom
+        if self.accept(Type.NAME):
+            func_name = self.previous().value
+            if self.accept(Type.LPAREN):
+                node = ASTNode(ASTNodeType.CallStmt, func_name)
+                while not self.accept(Type.RPAREN):
+                    arg = ASTNode(ASTNodeType.Argument)
+                    expr = self.parseExpression()
+                    if expr:
+                        arg.push(expr)
+                        node.push(arg)
+                    else:
+                        # could also error here
+                        return
+                return node
+            return ASTNode(ASTNodeType.Variable, func_name)
+        else:
+            return self.parseAtom()
 
     def parseAtom(self):
         # atom:
@@ -447,12 +472,17 @@ class Parser:
         # | NAME
         # | TRUE
         # | FALSE
+        # | '(' expression ')'
         if self.accept(Type.INT, Type.STRING, Type.NAME):
             return ASTNode(self.atommap[self.previous().type], self.previous().value)
         elif self.accept(Type.TRUE):
             return ASTNode(self.atommap[self.previous().type], 1)
         elif self.accept(Type.FALSE):
             return ASTNode(self.atommap[self.previous().type], 0)
+        elif self.accept(Type.LPAREN):
+            expr = self.parseExpression()
+            if expr and self.accept(Type.RPAREN):
+                return expr
     
     def parseListBody(self):
         # TODO add list body parsing logic
