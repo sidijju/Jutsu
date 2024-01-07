@@ -27,7 +27,7 @@ class ASTNodeType(Enum):
 class ASTNode:
     """Represent node in AST (Abstract Symbol Tree)"""
     
-    def __init__(self, nodetype, value = ""):
+    def __init__(self, nodetype, value = None):
         self.nodetype = nodetype
         self.value = value
         self.children = []
@@ -141,11 +141,11 @@ class Parser:
         else:
             self.restore()
         
-        # node = self.parseCompoundStatement()
-        # if node:
-        #     return node
-        # else:
-        #     self.restore()
+        node = self.parseCompoundStatement()
+        if node:
+            return node
+        else:
+            self.restore()
         
     def parseSimpleStatement(self):
         # simple_stmt:
@@ -244,29 +244,32 @@ class Parser:
     def parseIfStatement(self):
         # if_statement:
         # | 'if' expression body
-        self.expect(Type.IF)
-        expr = self.parseExpression()
-        block = self.parseBody()
-        node = ASTNode(ASTNodeType.IfStmt)
-        node.push(expr)
-        node.push(block)
-        return node
+        if self.expect(Type.IF):
+            expr = self.parseExpression()
+            body = self.parseBody()
+            node = ASTNode(ASTNodeType.IfStmt)
+            if expr:
+                node.push(expr)
+            if body:
+                node.push(body)
+            return node
     
     def parseBody(self):
         # body:
         # | '{' body_prime
-        self.expect(Type.LCB)
-        node = ASTNode(ASTNodeType.Body)
-        self.parseBodyPrime(node)
-        return node
+        if self.expect(Type.LCB):
+            node = ASTNode(ASTNodeType.Body)
+            self.parseBodyPrime(node)
+            return node
     
     def parseBodyPrime(self, node):
         # body_prime:
-        # | statement body_prime
+        # | statement NEWLINE body_prime
         # | '}'
         if not self.accept(Type.RCB):
             statement = self.parseStatement()
             if statement:
+                self.accept(Type.NEWLINE)
                 node.push(statement)
                 self.parseBodyPrime(node)
 
