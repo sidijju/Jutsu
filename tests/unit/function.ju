@@ -12,6 +12,6 @@ jutsu c(argOne, argTwo, argThree) {
     release z
 }
 
-a()
-b(1)
-c(1, 2, 3)
+print a()
+print b(1)
+print c(1, 2, 3)

@@ -18,6 +18,7 @@ Jutsu requires Python, Pyinstaller (can be acquired using pip) and Make for inst
 * For and While Loops
 * Panic Mode Error Recovery
 * I/O
+* Default Function Parameters / Arguments
 
 ### Implemented Features
 

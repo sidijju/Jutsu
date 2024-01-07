@@ -65,11 +65,15 @@ class Parser:
     }
 
     def __init__(self, tokens):
-        self.ast = ASTNode(ASTNodeType.Node)
         self.tokens = tokens
         self.current = 0
         self.backtrack = 0
-        self.parseProgram()
+
+        try:
+            self.parseProgram()
+        except Exception as e:
+            print("Exception during parsing:")
+            print(e)
 
     def next(self) -> Token:
         """Peek the next token"""
@@ -122,7 +126,7 @@ class Parser:
         """Parse program"""
         # program:
         # | [stmt+] EOF
-
+        self.ast = ASTNode(ASTNodeType.Node)
         while not self.atEnd():
             node = self.parseStatement()
             if node:
@@ -238,8 +242,34 @@ class Parser:
             return node
 
     def parseFunctionDefinition(self):
-        # TODO add function definition parsing logic
-        return None
+        # function_def:
+        # | 'jutsu' NAME '(' NAME* ')' body
+        if self.expect(Type.DEFINE):
+            if self.expect(Type.NAME):
+                func_def = ASTNode(ASTNodeType.AssignStmt, self.previous().value)
+                if self.expect(Type.LPAREN):
+                    num_args = 0
+                    num_commas = 0
+                    while not self.accept(Type.RPAREN):
+                        varname = self.expect(Type.NAME)
+                        if varname:
+                            num_args += 1
+                            arg = ASTNode(ASTNodeType.VarDecl, varname)
+                            func_def.push(arg)
+                        else:
+                            return
+
+                        if self.accept(Type.COMMA):
+                            num_commas += 1
+
+                    if num_args > 0 and num_commas != num_args - 1:
+                        self.error()
+                        return
+                    
+                    body = self.parseBody()
+                    func_def.push(body)
+                    return func_def
+            
 
     def parseIfStatement(self):
         # if_statement:
@@ -448,7 +478,7 @@ class Parser:
     
     def parsePrimary(self):
         # primary:
-        # | NAME '(' expression+ ')'
+        # | NAME '(' (expression | (expression ',')+) ')'
         # | atom
         if self.accept(Type.NAME):
             func_name = self.previous().value
@@ -463,10 +493,11 @@ class Parser:
                     else:
                         # could also error here
                         return
+                    
+                    self.accept(Type.COMMA)
                 return node
             return ASTNode(ASTNodeType.Variable, func_name)
-        else:
-            return self.parseAtom()
+        return self.parseAtom()
 
     def parseAtom(self):
         # atom:

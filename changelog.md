@@ -1,6 +1,10 @@
 # Jutsu Development Log
 This file documents all development changes to the Jutsu language.
 
+## 1/7/2023
+
+Completed parsing for functions and comma-separated arguments / parameters
+
 ## 1/6/2023
 
 Completed rudimentary binary operation parsing w/ precedence.
